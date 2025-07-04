@@ -51,6 +51,12 @@
     <div class="mt-4">
       <h2>Pricing Matrix</h2>
     </div>
+   <form class="form-inline" method="POST" action="{{ route('logout') }}" style="position: fixed; top: 20px; right: 20px;">
+    @csrf
+    <button class="btn btn-outline-danger" type="submit">Logout</button>
+</form>
+
+
 
     <div class="mt-5">
       <h4>Customer List</h4>

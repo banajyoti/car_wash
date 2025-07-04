@@ -43,4 +43,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function washes()
+{
+    return $this->hasMany(PlanConfigur::class, 'cutomer_id'); // or 'customer_id' if that's correct
+}
 }

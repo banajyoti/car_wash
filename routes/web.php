@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\SalesProcessingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,12 +17,18 @@ use App\Http\Controllers\LoginController;
 |
 */
 
+// Route::get('/', function () {
+//     return view('login');
+// });
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/login');
 });
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login.form');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+
+Route::get('/register', [LoginController::class, 'showForm']);
+Route::post('/register', [LoginController::class, 'store'])->name('register.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -39,4 +47,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/api/sagment/{id}/data', [CustomerController::class, 'getBySagment']);
 
+});
+
+Route::middleware(['auth', 'customer'])->group(function () {
+    Route::get('/customer/dashboard', function () {
+        return view('customer.dashboard');
+    })->name('customer.dashboard');
+    Route::get('/get-processing', [SalesProcessingController::class, 'getprocessing'])->name('get-processing');
+    Route::get('/admin/search-basic-plan', [SalesProcessingController::class, 'searchBasicPlan'])->name('search.basic.plan');
+    Route::post('/submit-premium-selection', [SalesProcessingController::class, 'storePremiumSelection'])->name('submit.premium.selection');
 });

@@ -8,12 +8,15 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Models\Plan;
+use Illuminate\Support\Facades\Hash;
 
 class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = User::latest()->get();
+        $customers = User::where('user_type', 2)
+                     ->withCount('washes')
+                     ->get();
         return view('admin', compact('customers'));
     }
 
@@ -23,12 +26,15 @@ class CustomerController extends Controller
             'customerName' => 'required|string|max:255',
             'customerPhone' => 'required|string|max:20',
             'car_no' => 'required|string|max:20',
+            'password'=> 'required',
         ]);
 
         User::create([
             'name' => $request->customerName,
             'phone' => $request->customerPhone,
             'car_no' => $request->car_no,
+            'user_type' => 2,
+            'password' => Hash::make(123456),
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Customer added successfully.');
@@ -58,7 +64,13 @@ class CustomerController extends Controller
 
     public function destroy(User $customer)
     {
+        $customer->loadCount('washes');
+
+        if ($customer->washes_count >= 1) {
+            return redirect()->route('admin.dashboard')->with('error', 'Cannot delete customer with more than 1 wash.');
+        }
         $customer->delete();
+
         return redirect()->route('admin.dashboard')->with('success', 'Customer deleted successfully.');
     }
 
@@ -77,40 +89,53 @@ class CustomerController extends Controller
         $segments = SagmentType::all();
         $washtypes = WashType::all();
         $sagment_prices = Plan::all();
-        return view('processing', compact('segments', 'washtypes', 'sagment_prices'));
+
+        $customers = User::where('user_type', 2)->withCount('washes')->get();
+        return view('processing', compact('segments', 'washtypes', 'sagment_prices', 'customers'));
     }
 
     public function searchBasicPlan(Request $request)
     {
         $query = $request->input('query');
 
-        $users = User::where('name', 'like', "%$query%")
-            ->orWhere('phone', 'like', "%$query%")
-            ->orWhere('car_no', 'like', "%$query%")
-            ->orWhere('id', 'like', "%$query%")
-            ->get(['id', 'name', 'phone', 'car_no']);
+        $users = User::where('user_type', 2)
+                    ->where(function ($q) use ($query) {
+                        $q->where('name', 'like', "%{$query}%")
+                        ->orWhere('phone', 'like', "%{$query}%")
+                        ->orWhere('car_no', 'like', "%{$query}%");
+                    })
+                    ->withCount('washes')
+                    ->get();
 
-        return response()->json($users);
+    return response()->json($users);
     }
     public function storePremiumSelection(Request $request)
-{ 
-    // $validated = $request->validate([
-    //     'customer_id' => 'required',
-    //     'sagment_id' => 'required',
-    //     'wash_type_id' => 'required',
-    // ]);
+    { 
+    $validated = $request->validate([
+        'customer_id' => 'required|exists:users,id',
+        'sagment_id' => 'required',
+        'wash_type_id' => 'required',
+        'prices' => 'required|numeric',
+    ]);
 
-    // Example: store into orders or pivot table
-    //dd($request->name);
+    $customer = User::withCount('washes')->find($request->customer_id);
+    $price = $customer->washes_count > 4 ? null : $request->prices;
+
     DB::table('plan_configurs')->insert([
         'cutomer_id' => $request['customer_id'],
         'sagment_id' => $request['sagment_id'],
-        'wash_type_id' => $request->name,
+        'wash_type_id' => $request->wash_type_name,
+        'prices' => $price,
         'created_at' => now(),
         'updated_at' => now()
     ]);
 
-    return redirect()->back()->with('success', 'Premium plan submitted successfully.');
+    return redirect()->back()->with([
+        'success' => 'Submitted successfully.',
+        'price'   => $price,
+    ]);
+
+    //return redirect()->back()->with('success', 'Submitted successfully.');
 }
 
 public function storePlan(Request $request)

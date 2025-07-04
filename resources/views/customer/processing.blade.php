@@ -22,11 +22,7 @@
     <h4 class="text-white">Car Wash Admin</h4>
     <hr class="text-white" />
     <a href="#">Dashboard</a>
-    <a href="{{ route('admin.dashboard') }}">Customers Information</a>
-    <a href="{{ route('get-plan') }}">Plan Configurator</a>
     <a href="{{ route('get-processing') }}">Sale Processing</a>
-    <a href="#">Reporting</a>
-    <a href="#">Mobile Workflow</a>
   </div>
 
   <div class="content">
@@ -42,16 +38,10 @@
 
 
     @if(session('success'))
-    <div class="alert alert-success">
+      <div class="alert alert-success mt-3">
         {{ session('success') }}
-        @if(session('price') !== null)
-            <br>Final Price: {{ session('price') }}
-        @else
-            <br>No charge (More than 4 washes)
-        @endif
-    </div>
+      </div>
     @endif
-
 
     <div class="mt-4">
       <h2>Sale Processing</h2>

@@ -44,16 +44,22 @@
 
     <nav class="navbar navbar-light bg-light justify-content-between">
   <a class="navbar-brand">Admin Dashboard</a>
-  <form class="form-inline" method="POST" action="{{ route('logout') }}">
+ <form class="form-inline" method="POST" action="{{ route('logout') }}" style="position: fixed; top: 20px; right: 20px;">
     @csrf
     <button class="btn btn-outline-danger" type="submit">Logout</button>
-  </form>
+</form>
+
 </nav>
 
 
     @if(session('success'))
       <div class="alert alert-success mt-3">
         {{ session('success') }}
+      </div>
+    @endif
+    @if(session('error'))
+      <div class="alert alert-danger mt-2">
+        {{ session('error') }}
       </div>
     @endif
 
@@ -71,6 +77,7 @@
             <th>Name</th>
             <th>Phone</th>
             <th>Car Number</th>
+            <th>Total Washes</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -81,6 +88,7 @@
               <td>{{ $customer->name }}</td>
               <td>{{ $customer->phone }}</td>
               <td>{{ $customer->car_no }}</td>
+              <td>{{ $customer->washes_count }}</td>
               <td>
                 <a href="{{ route('customers.edit', $customer->id) }}" class="btn btn-sm btn-warning">Edit</a>
                 <form action="{{ route('customers.destroy', $customer->id) }}" method="POST" style="display:inline;">
@@ -115,11 +123,15 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Phone Number</label>
-              <input type="text" name="customerPhone" class="form-control" required />
+              <input type="text" onkeypress="return isNumber(event)" name="customerPhone" maxlength="10" minlength="10" class="form-control" required />
             </div>
             <div class="mb-3">
               <label class="form-label">Car Number</label>
               <input type="text" name="car_no" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="text" name="password" class="form-control" required />
             </div>
           </div>
           <div class="modal-footer">
@@ -140,5 +152,16 @@
       $('#customerTable').DataTable();
     });
   </script>
+  <script>
+     function isNumber(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+            return false;
+        }
+        return true;
+    }
+
+</script>
 </body>
 </html>
